@@ -55,29 +55,29 @@ function autoSolveStep() {
             isAutoSolving = false;
         }
     } else if (currentAlgorithm === 'backtrack') {
-        // Спочатку застосовуємо Line Solver
-        let progress = true;
-        while (progress) {
-            const result = executeRulesStep();
-            if (result.changed) {
-                algorithmStats.steps++;
-                algorithmStats[result.rule]++;
-                updateAlgorithmStats();
-                addLogEntry(result.message, result.rule);
-                updateDisplay();
-            }
-            progress = result.changed;
-        }
+        // Спочатку виконуємо ОДИН крок Line Solver
+        const result = executeRulesStep();
+        if (result.changed) {
+            algorithmStats.steps++;
+            algorithmStats[result.rule]++;
+            updateAlgorithmStats();
+            addLogEntry(result.message, result.rule);
+            updateDisplay();
 
-        // Якщо не розв'язано, використовуємо backtracking
-        if (!checkIfSolved()) {
-            addLogEntry('Запуск backtracking...', 'rule2');
-            const result = executeBacktrackingStep();
-            if (result.changed) {
+            if (checkIfSolved()) {
+                updateStatus('Головоломку розв\'язано з Line Solver!');
+                document.getElementById('gameStatus').className = 'status solved';
+                isAutoSolving = false;
+            }
+        } else {
+            // Line Solver не може продовжити - використовуємо backtracking
+            addLogEntry('Line Solver завершив роботу. Запуск backtracking...', 'rule2');
+            const backtrackResult = executeBacktrackingStep();
+            if (backtrackResult.changed) {
                 algorithmStats.steps++;
-                if (result.rule) algorithmStats[result.rule]++;
+                if (backtrackResult.rule) algorithmStats[backtrackResult.rule]++;
                 updateAlgorithmStats();
-                addLogEntry(result.message, result.rule);
+                addLogEntry(backtrackResult.message, backtrackResult.rule);
                 updateDisplay();
 
                 if (checkIfSolved()) {
@@ -85,10 +85,10 @@ function autoSolveStep() {
                     document.getElementById('gameStatus').className = 'status solved';
                 }
             } else {
-                addLogEntry(result.message, 'error');
+                addLogEntry(backtrackResult.message, 'error');
             }
+            isAutoSolving = false;
         }
-        isAutoSolving = false;
     } else {
         addLogEntry('Цей алгоритм ще не реалізований', 'error');
     }
