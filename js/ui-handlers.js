@@ -16,6 +16,7 @@ function addLogEntry(message, type = '') {
 function updateAlgorithmStats() {
     document.getElementById('algorithmSteps').textContent = algorithmStats.steps;
     document.getElementById('rule1Count').textContent = algorithmStats.rule1;
+    document.getElementById('rule2Count').textContent = algorithmStats.rule2 || 0;
 
     let totalCells = 0;
     let correctCells = 0;
@@ -50,9 +51,44 @@ function autoSolveStep() {
                 isAutoSolving = false;
             }
         } else {
-            addLogEntry('Line Solver не може продовжити. Потрібен backtracking.', 'error');
+            addLogEntry('Line Solver не може продовжити.', 'error');
             isAutoSolving = false;
         }
+    } else if (currentAlgorithm === 'backtrack') {
+        // Спочатку застосовуємо Line Solver
+        let progress = true;
+        while (progress) {
+            const result = executeRulesStep();
+            if (result.changed) {
+                algorithmStats.steps++;
+                algorithmStats[result.rule]++;
+                updateAlgorithmStats();
+                addLogEntry(result.message, result.rule);
+                updateDisplay();
+            }
+            progress = result.changed;
+        }
+
+        // Якщо не розв'язано, використовуємо backtracking
+        if (!checkIfSolved()) {
+            addLogEntry('Запуск backtracking...', 'rule2');
+            const result = executeBacktrackingStep();
+            if (result.changed) {
+                algorithmStats.steps++;
+                if (result.rule) algorithmStats[result.rule]++;
+                updateAlgorithmStats();
+                addLogEntry(result.message, result.rule);
+                updateDisplay();
+
+                if (checkIfSolved()) {
+                    updateStatus('Головоломку розв\'язано з backtracking!');
+                    document.getElementById('gameStatus').className = 'status solved';
+                }
+            } else {
+                addLogEntry(result.message, 'error');
+            }
+        }
+        isAutoSolving = false;
     } else {
         addLogEntry('Цей алгоритм ще не реалізований', 'error');
     }
@@ -100,7 +136,7 @@ function pauseAutoSolve() {
 
 function resetAutoSolve() {
     isAutoSolving = false;
-    algorithmStats = { steps: 0, rule1: 0 };
+    algorithmStats = { steps: 0, rule1: 0, rule2: 0 };
     updateAlgorithmStats();
     document.getElementById('algorithmLog').innerHTML = '';
     clearGrid();

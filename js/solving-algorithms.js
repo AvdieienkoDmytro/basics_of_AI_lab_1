@@ -1,4 +1,4 @@
-// Алгоритм розв'язування нонограм - LINE SOLVER
+// Алгоритм розв'язування нонограм - LINE SOLVER + BACKTRACKING
 
 // Генерує всі можливі варіанти розміщення блоків у лінії
 function generatePossibleLines(hints, length) {
@@ -57,15 +57,14 @@ function solveLine(line, hints) {
     // Відкидаємо варіанти, що конфліктують з поточним станом
     const validLines = possibleLines.filter(possible => {
         for (let i = 0; i < length; i++) {
-            if (line[i] === 1 && possible[i] !== 1) return false;  // Заповнена клітинка має залишатись заповненою
-            if (line[i] === -1 && possible[i] !== 0) return false; // Закреслена клітинка має залишатись порожньою
+            if (line[i] === 1 && possible[i] !== 1) return false;
+            if (line[i] === -1 && possible[i] !== 0) return false;
         }
         return true;
     });
 
     if (validLines.length === 0) {
-        console.error('Помилка: немає валідних варіантів для лінії');
-        return null;
+        return null; // Суперечність - немає валідних варіантів
     }
 
     // Знаходимо спільні клітинки
@@ -79,9 +78,8 @@ function solveLine(line, hints) {
             if (validLine[i] !== 0) allEmpty = false;
         }
 
-        if (allFilled) result[i] = 1;       // У всіх варіантах заповнена
-        else if (allEmpty) result[i] = -1;  // У всіх варіантах порожня
-        // Інакше залишається 0 (невизначена)
+        if (allFilled) result[i] = 1;
+        else if (allEmpty) result[i] = -1;
     }
 
     return result;
@@ -93,7 +91,7 @@ function applyLineSolverToRow(row) {
     const currentRow = gameGrid[row];
 
     const solved = solveLine(currentRow, hints);
-    if (!solved) return { changed: false };
+    if (!solved) return { changed: false, contradiction: true };
 
     let changed = false;
     let filledCount = 0;
@@ -125,7 +123,7 @@ function applyLineSolverToColumn(col) {
     }
 
     const solved = solveLine(currentCol, hints);
-    if (!solved) return { changed: false };
+    if (!solved) return { changed: false, contradiction: true };
 
     let changed = false;
     let filledCount = 0;
@@ -153,6 +151,9 @@ function executeRulesStep() {
     // Line Solver для всіх рядків
     for (let i = 0; i < gridSize.height; i++) {
         const result = applyLineSolverToRow(i);
+        if (result.contradiction) {
+            return { changed: false, contradiction: true };
+        }
         if (result && result.changed) {
             return {
                 changed: true,
@@ -165,6 +166,9 @@ function executeRulesStep() {
     // Line Solver для всіх колонок
     for (let j = 0; j < gridSize.width; j++) {
         const result = applyLineSolverToColumn(j);
+        if (result.contradiction) {
+            return { changed: false, contradiction: true };
+        }
         if (result && result.changed) {
             return {
                 changed: true,
@@ -175,4 +179,75 @@ function executeRulesStep() {
     }
 
     return { changed: false };
+}
+
+// BACKTRACKING АЛГОРИТМ
+function solveWithBacktracking() {
+    // Спочатку застосовуємо Line Solver доти, доки можливо
+    let progress = true;
+    while (progress) {
+        const result = executeRulesStep();
+        if (result.contradiction) {
+            return false; // Суперечність - цей шлях неправильний
+        }
+        progress = result.changed;
+    }
+
+    // Перевіряємо чи розв'язано
+    if (checkIfSolved()) {
+        return true;
+    }
+
+    // Знаходимо невизначену клітинку для здогадки
+    for (let i = 0; i < gridSize.height; i++) {
+        for (let j = 0; j < gridSize.width; j++) {
+            if (gameGrid[i][j] === 0) {
+                // Зберігаємо поточний стан
+                const savedGrid = gameGrid.map(row => [...row]);
+
+                // Пробуємо заповнити клітинку
+                gameGrid[i][j] = 1;
+                if (solveWithBacktracking()) {
+                    return true; // Знайдено розв'язок
+                }
+
+                // Відновлюємо стан і пробуємо закреслити
+                gameGrid = savedGrid.map(row => [...row]);
+                gameGrid[i][j] = -1;
+                if (solveWithBacktracking()) {
+                    return true; // Знайдено розв'язок
+                }
+
+                // Жоден варіант не спрацював - відкочуємося
+                gameGrid = savedGrid.map(row => [...row]);
+                return false;
+            }
+        }
+    }
+
+    return false; // Не знайдено невизначених клітинок
+}
+
+// Функція для запуску backtracking з інтерфейсу
+function executeBacktrackingStep() {
+    // Зберігаємо початковий стан
+    const initialGrid = gameGrid.map(row => [...row]);
+
+    // Запускаємо backtracking
+    const solved = solveWithBacktracking();
+
+    if (solved) {
+        return {
+            changed: true,
+            rule: 'rule2',
+            message: 'Backtracking знайшов розв\'язок!'
+        };
+    } else {
+        // Відновлюємо початковий стан якщо не вдалося розв'язати
+        gameGrid = initialGrid.map(row => [...row]);
+        return {
+            changed: false,
+            message: 'Backtracking не знайшов розв\'язок'
+        };
+    }
 }
