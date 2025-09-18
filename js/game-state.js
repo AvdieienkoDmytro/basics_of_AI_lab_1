@@ -11,13 +11,7 @@ let gameStartTime = Date.now();
 let errors = 0;
 let algorithmStats = {
     steps: 0,
-    rule1: 0,
-    rule2: 0,
-    rule3: 0,
-    rule4: 0,
-    rule5: 0,
-    rule6: 0,
-    rule7: 0
+    rule1: 0
 };
 let isAutoSolving = false;
 let autoSolveSpeed = 800;
@@ -28,7 +22,7 @@ function resetGame() {
     gameGrid = Array(gridSize.height).fill().map(() => Array(gridSize.width).fill(0));
     gameStartTime = Date.now();
     errors = 0;
-    algorithmStats = { steps: 0, rule1: 0, rule2: 0, rule3: 0, rule4: 0, rule5: 0, rule6: 0, rule7: 0 };
+    algorithmStats = { steps: 0, rule1: 0 };
     updateAlgorithmStats();
     document.getElementById('algorithmLog').innerHTML = '';
     lastChangedCell = null;

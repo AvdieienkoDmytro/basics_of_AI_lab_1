@@ -16,12 +16,6 @@ function addLogEntry(message, type = '') {
 function updateAlgorithmStats() {
     document.getElementById('algorithmSteps').textContent = algorithmStats.steps;
     document.getElementById('rule1Count').textContent = algorithmStats.rule1;
-    document.getElementById('rule2Count').textContent = algorithmStats.rule2;
-    document.getElementById('rule3Count').textContent = algorithmStats.rule3;
-    document.getElementById('rule4Count').textContent = algorithmStats.rule4 || 0;
-    document.getElementById('rule5Count').textContent = algorithmStats.rule5 || 0;
-    document.getElementById('rule6Count').textContent = algorithmStats.rule6 || 0;
-    document.getElementById('rule7Count').textContent = algorithmStats.rule7 || 0;
 
     let totalCells = 0;
     let correctCells = 0;
@@ -56,7 +50,7 @@ function autoSolveStep() {
                 isAutoSolving = false;
             }
         } else {
-            addLogEntry('7 правил не можуть продовжити. Потрібен backtracking.', 'error');
+            addLogEntry('Line Solver не може продовжити. Потрібен backtracking.', 'error');
             isAutoSolving = false;
         }
     } else {
@@ -90,7 +84,7 @@ function autoSolveAll() {
 
             setTimeout(solveNext, autoSolveSpeed);
         } else {
-            addLogEntry('Базові правила завершені. Потрібен backtracking.', 'error');
+            addLogEntry('Line Solver завершив роботу. Потрібен backtracking.', 'error');
             isAutoSolving = false;
             updateStatus('Автоматичне розв\'язування зупинено');
         }
@@ -106,7 +100,7 @@ function pauseAutoSolve() {
 
 function resetAutoSolve() {
     isAutoSolving = false;
-    algorithmStats = { steps: 0, rule1: 0, rule2: 0, rule3: 0, rule4: 0, rule5: 0, rule6: 0, rule7: 0 };
+    algorithmStats = { steps: 0, rule1: 0 };
     updateAlgorithmStats();
     document.getElementById('algorithmLog').innerHTML = '';
     clearGrid();
@@ -144,7 +138,7 @@ function switchGameMode(mode) {
     if (mode === 'auto') {
         autoStats.style.display = 'block';
         logSection.style.display = 'block';
-        updateStatus('Автоматичний режим - Оберіть алгоритм та натисніть "Один крок"');
+        updateStatus('Автоматичний режим - натисніть "Один крок" або "Розв\'язати все"');
     } else {
         autoStats.style.display = 'none';
         logSection.style.display = 'none';
