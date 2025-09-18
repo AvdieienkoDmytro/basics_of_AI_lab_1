@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Японський кросворд - Нонограма</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Японський кросворд (Нонограма)</h1>
+            <p>Інтелектуальна система для розв'язування японських кросвордів</p>
+        </div>
+
+        <!-- Перемикач режимів -->
+        <div class="mode-switch">
+            <button class="mode-switch-btn active" data-mode="manual">👤 Ручне розв'язування</button>
+            <button class="mode-switch-btn" data-mode="auto">🤖 Автоматичне розв'язування</button>
+        </div>
+
+        <div class="status" id="gameStatus">
+            Оберіть режим для початку гри
+        </div>
+
+        <!-- Режим ручного розв'язування -->
+        <div class="mode-content active" id="manual-mode">
+            <div class="mode-selector">
+                <div class="mode-btn active" data-mode="fill">🔲 Заповнити</div>
+                <div class="mode-btn" data-mode="cross">✕ Закреслити</div>
+                <div class="mode-btn" data-mode="clear">🗑️ Очистити</div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-secondary" onclick="newGame()">🎮 Нова гра</button>
+                <button class="btn-primary" onclick="checkSolution()">✓ Перевірити</button>
+                <button class="btn-secondary" onclick="getHint()">💡 Підказка</button>
+                <button class="btn-danger" onclick="clearGrid()">🗑️ Очистити все</button>
+            </div>
+        </div>
+
+        <!-- Режим автоматичного розв'язування -->
+        <div class="mode-content" id="auto-mode">
+            <div class="algorithm-selector">
+                <div class="algorithm-btn active" data-algorithm="rules">
+                    🔧 7 Правил розв'язування
+                </div>
+                <div class="algorithm-btn disabled" data-algorithm="backtrack">
+                    🔄 Правила + Backtracking
+                </div>
+                <div class="algorithm-btn disabled" data-algorithm="and-or">
+                    🌳 І-АБО графи
+                </div>
+            </div>
+
+            <div class="auto-controls">
+                <button class="btn-primary" onclick="autoSolveStep()">👆 Один крок</button>
+                <button class="btn-secondary" onclick="autoSolveAll()">⚡ Розв'язати все</button>
+                <button class="btn-warning" onclick="pauseAutoSolve()">⏸️ Пауза</button>
+                <button class="btn-danger" onclick="resetAutoSolve()">🔄 Скинути</button>
+            </div>
+
+            <div class="speed-control">
+                <label>Швидкість:</label>
+                <input type="range" class="speed-slider" id="speedSlider" min="100" max="2000" value="800">
+                <span id="speedValue">800мс</span>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="puzzle-container">
+                <div class="hints-container">
+                    <div class="col-hints-row" id="colHints"></div>
+                    <div class="grid-with-hints">
+                        <div class="row-hints-container" id="rowHints"></div>
+                        <div class="grid" id="gameGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-section">
+                    <h4>⚙️ Налаштування</h4>
+                    <div class="size-input">
+                        <label>Розмір:</label>
+                        <input type="number" id="gridWidth" value="10" min="5" max="20">
+                        <span>×</span>
+                        <input type="number" id="gridHeight" value="10" min="5" max="20">
+                    </div>
+                    <button class="btn-secondary" onclick="createCustomGrid()" style="width: 100%;">Створити сітку</button>
+                </div>
+
+                <div class="info-section">
+                    <h4>📊 Прогрес</h4>
+                    <p>Заповнено: <span id="progress">0%</span></p>
+                    <p>Помилок: <span id="errors">0</span></p>
+                    <p>Час: <span id="timer">00:00</span></p>
+                </div>
+
+                <div class="info-section" id="auto-stats" style="display: none;">
+                    <h4>🤖 Статистика алгоритму</h4>
+                    <div class="stats">
+                        <div class="stats-row">
+                            <span>Кроки:</span>
+                            <span id="algorithmSteps">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Full Lines:</span>
+                            <span id="rule1Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Overlap:</span>
+                            <span id="rule2Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Simple Spaces:</span>
+                            <span id="rule3Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Force:</span>
+                            <span id="rule4Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Glue:</span>
+                            <span id="rule5Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Mercury:</span>
+                            <span id="rule6Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Max Range:</span>
+                            <span id="rule7Count">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Успішність:</span>
+                            <span id="successRate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>🎲 Шаблони</h4>
+                    <button class="btn-secondary" onclick="loadTemplate('heart')" style="width: 100%; margin-bottom: 5px;">❤️ Серце</button>
+                    <button class="btn-secondary" onclick="loadTemplate('star')" style="width: 100%; margin-bottom: 5px;">⭐ Зірка</button>
+                    <button class="btn-secondary" onclick="loadTemplate('house')" style="width: 100%; margin-bottom: 5px;">🏠 Будинок</button>
+                    <button class="btn-warning" onclick="loadTemplate('hard')" style="width: 100%;">🧩 Складний</button>
+                </div>
+
+                <div class="info-section" id="algorithm-log-section" style="display: none;">
+                    <h4>📋 Лог алгоритму</h4>
+                    <div class="algorithm-log" id="algorithmLog"></div>
+                </div>
+
+                <div class="info-section">
+                    <h4>ℹ️ 7 Правил розв'язування</h4>
+                    <ul style="font-size: 12px; margin: 0; padding-left: 15px;">
+                        <li><strong>Full Lines:</strong> повні лінії ([0] або точний розмір)</li>
+                        <li><strong>Overlap:</strong> перетини блоків при мін/макс розміщенні</li>
+                        <li><strong>Simple Spaces:</strong> занадто малі проміжки</li>
+                        <li><strong>Force:</strong> завершення частково заповнених блоків</li>
+                        <li><strong>Glue:</strong> склеювання сусідніх блоків</li>
+                        <li><strong>Mercury:</strong> аналіз крайових позицій</li>
+                        <li><strong>Max Range:</strong> виключення недосяжних клітинок</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game-state.js"></script>
+    <script src="js/solving-algorithms.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/ui-handlers.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
