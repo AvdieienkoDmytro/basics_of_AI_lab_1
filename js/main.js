@@ -7,4 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSpeedControl();
     newGame();
     startTimer();
+
+    // Початкове повідомлення
+    addLogEntry('Система готова до роботи', '');
+    addLogEntry('Оберіть режим та почніть гру!', '');
 });

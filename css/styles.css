@@ -128,11 +128,18 @@ button {
     cursor: pointer;
     border-radius: 5px;
     position: relative;
+    transition: all 0.3s;
 }
 
 .algorithm-btn.active {
     border-color: #2196F3;
     background: #2196F3;
+    color: white;
+}
+
+.algorithm-btn[data-algorithm="and-or"].active {
+    border-color: #9c27b0;
+    background: #9c27b0;
     color: white;
 }
 
@@ -184,6 +191,19 @@ button {
     justify-content: center;
     font-size: 16px;
     transition: background-color 0.2s;
+}
+
+/* Менші клітинки для великих сіток */
+.grid.large .cell {
+    width: 12px;
+    height: 12px;
+    font-size: 8px;
+}
+
+.hint.small {
+    padding: 1px 3px;
+    font-size: 8px;
+    min-width: 12px;
 }
 
 .cell.filled {
@@ -309,8 +329,8 @@ button {
 
 .log-entry.rule1 { border-left-color: #4CAF50; }
 .log-entry.rule2 { border-left-color: #2196F3; }
-.log-entry.rule3 { border-left-color: #ff9800; }
-.log-entry.rule4 { border-left-color: #9c27b0; }
+.log-entry.rule3 { border-left-color: #9c27b0; }
+.log-entry.rule4 { border-left-color: #ff9800; }
 .log-entry.rule5 { border-left-color: #00bcd4; }
 .log-entry.rule6 { border-left-color: #795548; }
 .log-entry.rule7 { border-left-color: #607d8b; }

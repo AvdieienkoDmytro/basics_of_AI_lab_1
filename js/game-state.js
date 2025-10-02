@@ -12,18 +12,23 @@ let errors = 0;
 let algorithmStats = {
     steps: 0,
     rule1: 0,
-    rule2: 0
+    rule2: 0,
+    rule3: 0  // Додано для І-АБО графа
 };
 let isAutoSolving = false;
 let autoSolveSpeed = 800;
 let lastChangedCell = null;
+
+// Стан І-АБО графа
+let andOrState = null;
 
 // Допоміжні функції для керування станом
 function resetGame() {
     gameGrid = Array(gridSize.height).fill().map(() => Array(gridSize.width).fill(0));
     gameStartTime = Date.now();
     errors = 0;
-    algorithmStats = { steps: 0, rule1: 0, rule2: 0 };
+    algorithmStats = { steps: 0, rule1: 0, rule2: 0, rule3: 0 };
+    andOrState = null;  // Скидаємо стан І-АБО графа
     updateAlgorithmStats();
     document.getElementById('algorithmLog').innerHTML = '';
     lastChangedCell = null;

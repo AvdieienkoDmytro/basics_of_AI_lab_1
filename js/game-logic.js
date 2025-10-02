@@ -58,6 +58,13 @@ function createGrid() {
     gridElement.style.gridTemplateColumns = `repeat(${gridSize.width}, 1fr)`;
     gridElement.innerHTML = '';
 
+    // Додаємо клас для великих сіток
+    if (gridSize.width > 20 || gridSize.height > 20) {
+        gridElement.classList.add('large');
+    } else {
+        gridElement.classList.remove('large');
+    }
+
     for (let i = 0; i < gridSize.height; i++) {
         for (let j = 0; j < gridSize.width; j++) {
             const cell = document.createElement('div');
@@ -71,12 +78,16 @@ function createGrid() {
 
     const rowHintsContainer = document.getElementById('rowHints');
     rowHintsContainer.innerHTML = '';
+    const isLarge = gridSize.width > 20 || gridSize.height > 20;
+
     for (let i = 0; i < gridSize.height; i++) {
         const rowHintDiv = document.createElement('div');
         rowHintDiv.className = 'row-hint';
+        if (isLarge) rowHintDiv.style.height = '13px';
+
         rowHints[i].forEach(hint => {
             const hintSpan = document.createElement('span');
-            hintSpan.className = 'hint';
+            hintSpan.className = isLarge ? 'hint small' : 'hint';
             hintSpan.textContent = hint;
             rowHintDiv.appendChild(hintSpan);
         });
@@ -88,9 +99,14 @@ function createGrid() {
     for (let j = 0; j < gridSize.width; j++) {
         const colHintDiv = document.createElement('div');
         colHintDiv.className = 'col-hint-container';
+        if (isLarge) {
+            colHintDiv.style.width = '13px';
+            colHintDiv.style.height = '60px';
+        }
+
         colHints[j].forEach(hint => {
             const hintSpan = document.createElement('span');
-            hintSpan.className = 'hint';
+            hintSpan.className = isLarge ? 'hint small' : 'hint';
             hintSpan.textContent = hint;
             colHintDiv.appendChild(hintSpan);
         });

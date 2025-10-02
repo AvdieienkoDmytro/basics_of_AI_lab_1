@@ -17,6 +17,7 @@ function updateAlgorithmStats() {
     document.getElementById('algorithmSteps').textContent = algorithmStats.steps;
     document.getElementById('rule1Count').textContent = algorithmStats.rule1;
     document.getElementById('rule2Count').textContent = algorithmStats.rule2 || 0;
+    document.getElementById('rule3Count').textContent = algorithmStats.rule3 || 0;
 
     let totalCells = 0;
     let correctCells = 0;
@@ -37,12 +38,13 @@ function updateAlgorithmStats() {
 // АВТОМАТИЧНЕ РОЗВ'ЯЗУВАННЯ
 function autoSolveStep() {
     if (currentAlgorithm === 'rules') {
+        // Line Solver алгоритм
         const result = executeRulesStep();
         if (result.changed) {
             algorithmStats.steps++;
-            algorithmStats[result.rule]++;
+            algorithmStats.rule1++;
             updateAlgorithmStats();
-            addLogEntry(result.message, result.rule);
+            addLogEntry(result.message, 'rule1');
             updateDisplay();
 
             if (checkIfSolved()) {
@@ -54,14 +56,15 @@ function autoSolveStep() {
             addLogEntry('Line Solver не може продовжити.', 'error');
             isAutoSolving = false;
         }
+
     } else if (currentAlgorithm === 'backtrack') {
-        // Спочатку виконуємо ОДИН крок Line Solver
+        // Backtracking алгоритм - спочатку пробуємо Line Solver
         const result = executeRulesStep();
         if (result.changed) {
             algorithmStats.steps++;
-            algorithmStats[result.rule]++;
+            algorithmStats.rule1++;
             updateAlgorithmStats();
-            addLogEntry(result.message, result.rule);
+            addLogEntry(result.message, 'rule1');
             updateDisplay();
 
             if (checkIfSolved()) {
@@ -70,25 +73,78 @@ function autoSolveStep() {
                 isAutoSolving = false;
             }
         } else {
-            // Line Solver не може продовжити - використовуємо backtracking
-            addLogEntry('Line Solver завершив роботу. Запуск backtracking...', 'rule2');
-            const backtrackResult = executeBacktrackingStep();
-            if (backtrackResult.changed) {
-                algorithmStats.steps++;
-                if (backtrackResult.rule) algorithmStats[backtrackResult.rule]++;
-                updateAlgorithmStats();
-                addLogEntry(backtrackResult.message, backtrackResult.rule);
-                updateDisplay();
+            // Line Solver не може продовжити
+            addLogEntry('Line Solver зупинився', 'error');
 
-                if (checkIfSolved()) {
-                    updateStatus('Головоломку розв\'язано з backtracking!');
-                    document.getElementById('gameStatus').className = 'status solved';
+            if (!checkIfSolved()) {
+                addLogEntry('Головоломка ще не розв\'язана. Запуск backtracking...', 'rule2');
+
+                // Показуємо поточний стан перед backtracking
+                let unsolvedCells = 0;
+                for (let i = 0; i < gridSize.height; i++) {
+                    for (let j = 0; j < gridSize.width; j++) {
+                        if (gameGrid[i][j] === 0) unsolvedCells++;
+                    }
+                }
+                addLogEntry(`Нерозв'язаних клітинок: ${unsolvedCells}`, 'rule2');
+
+                const backtrackResult = executeBacktrackingStep();
+
+                addLogEntry(`Backtracking результат: ${JSON.stringify(backtrackResult)}`, 'rule2');
+
+                if (backtrackResult.changed) {
+                    algorithmStats.steps++;
+                    algorithmStats.rule2++;
+                    updateAlgorithmStats();
+                    addLogEntry(backtrackResult.message, 'rule2');
+                    updateDisplay();
+
+                    if (checkIfSolved()) {
+                        updateStatus('Головоломку розв\'язано з backtracking!');
+                        document.getElementById('gameStatus').className = 'status solved';
+                    } else {
+                        updateStatus('Backtracking виконано частково');
+                    }
+                } else {
+                    addLogEntry(backtrackResult.message || 'Backtracking не знайшов розв\'язок', 'error');
+                    updateStatus('Backtracking не зміг розв\'язати');
                 }
             } else {
-                addLogEntry(backtrackResult.message, 'error');
+                addLogEntry('Головоломка вже розв\'язана!', 'rule1');
+                updateStatus('Розв\'язано!');
             }
             isAutoSolving = false;
         }
+
+    } else if (currentAlgorithm === 'and-or') {
+        // І-АБО граф алгоритм
+        const result = executeAndOrStep();
+
+        if (result.changed) {
+            algorithmStats.steps++;
+            algorithmStats.rule3++;
+            updateAlgorithmStats();
+            addLogEntry(result.message, 'rule3');
+            updateDisplay();
+
+            if (checkIfSolved()) {
+                updateStatus('Головоломку розв\'язано за допомогою І-АБО графа!');
+                document.getElementById('gameStatus').className = 'status solved';
+                isAutoSolving = false;
+            }
+        } else {
+            if (result.finished) {
+                addLogEntry(result.message || 'І-АБО граф завершив роботу', 'rule3');
+                isAutoSolving = false;
+
+                if (!checkIfSolved()) {
+                    updateStatus('І-АБО граф завершено, але не розв\'язано повністю');
+                }
+            } else {
+                addLogEntry(result.message || 'І-АБО граф продовжує роботу', 'rule3');
+            }
+        }
+
     } else {
         addLogEntry('Цей алгоритм ще не реалізований', 'error');
     }
@@ -103,26 +159,105 @@ function autoSolveAll() {
     function solveNext() {
         if (!isAutoSolving) return;
 
-        const result = executeRulesStep();
-        if (result.changed) {
-            algorithmStats.steps++;
-            algorithmStats[result.rule]++;
-            updateAlgorithmStats();
-            addLogEntry(result.message, result.rule);
-            updateDisplay();
+        // Вибір алгоритму залежно від поточного режиму
+        let result;
 
-            if (checkIfSolved()) {
-                updateStatus('Головоломку розв\'язано автоматично!');
-                document.getElementById('gameStatus').className = 'status solved';
+        if (currentAlgorithm === 'rules') {
+            result = executeRulesStep();
+
+            if (result.changed) {
+                algorithmStats.steps++;
+                algorithmStats.rule1++;
+                updateAlgorithmStats();
+                addLogEntry(result.message, 'rule1');
+                updateDisplay();
+
+                if (checkIfSolved()) {
+                    updateStatus('Головоломку розв\'язано автоматично!');
+                    document.getElementById('gameStatus').className = 'status solved';
+                    isAutoSolving = false;
+                    return;
+                }
+
+                setTimeout(solveNext, autoSolveSpeed);
+            } else {
+                addLogEntry('Line Solver завершив роботу', 'error');
                 isAutoSolving = false;
-                return;
+                updateStatus('Автоматичне розв\'язування зупинено');
             }
 
-            setTimeout(solveNext, autoSolveSpeed);
-        } else {
-            addLogEntry('Line Solver завершив роботу. Потрібен backtracking.', 'error');
-            isAutoSolving = false;
-            updateStatus('Автоматичне розв\'язування зупинено');
+        } else if (currentAlgorithm === 'backtrack') {
+            // Спочатку пробуємо Line Solver
+            result = executeRulesStep();
+
+            if (result.changed) {
+                algorithmStats.steps++;
+                algorithmStats.rule1++;
+                updateAlgorithmStats();
+                addLogEntry(result.message, 'rule1');
+                updateDisplay();
+
+                if (checkIfSolved()) {
+                    updateStatus('Головоломку розв\'язано!');
+                    document.getElementById('gameStatus').className = 'status solved';
+                    isAutoSolving = false;
+                    return;
+                }
+
+                setTimeout(solveNext, autoSolveSpeed);
+            } else {
+                // Line Solver зупинився - запускаємо backtracking
+                if (!checkIfSolved()) {
+                    addLogEntry('Line Solver зупинився. Запуск backtracking...', 'rule2');
+
+                    const backtrackResult = executeBacktrackingStep();
+
+                    if (backtrackResult.changed) {
+                        algorithmStats.steps++;
+                        algorithmStats.rule2++;
+                        updateAlgorithmStats();
+                        addLogEntry(backtrackResult.message, 'rule2');
+                        updateDisplay();
+
+                        if (checkIfSolved()) {
+                            updateStatus('Головоломку розв\'язано з backtracking!');
+                            document.getElementById('gameStatus').className = 'status solved';
+                        }
+                    } else {
+                        addLogEntry(backtrackResult.message || 'Backtracking не знайшов розв\'язок', 'error');
+                    }
+                }
+                isAutoSolving = false;
+                updateStatus('Автоматичне розв\'язування завершено');
+            }
+
+        } else if (currentAlgorithm === 'and-or') {
+            result = executeAndOrStep();
+
+            if (result.changed) {
+                algorithmStats.steps++;
+                algorithmStats.rule3++;
+                updateAlgorithmStats();
+                addLogEntry(result.message, 'rule3');
+                updateDisplay();
+
+                if (checkIfSolved()) {
+                    updateStatus('Головоломку розв\'язано автоматично!');
+                    document.getElementById('gameStatus').className = 'status solved';
+                    isAutoSolving = false;
+                    return;
+                }
+
+                setTimeout(solveNext, autoSolveSpeed);
+            } else {
+                if (result.finished) {
+                    addLogEntry('І-АБО граф завершив роботу', 'rule3');
+                } else {
+                    addLogEntry('Алгоритм завершив роботу', 'error');
+                }
+                isAutoSolving = false;
+                updateStatus('Автоматичне розв\'язування зупинено');
+            }
         }
     }
 
@@ -136,7 +271,8 @@ function pauseAutoSolve() {
 
 function resetAutoSolve() {
     isAutoSolving = false;
-    algorithmStats = { steps: 0, rule1: 0, rule2: 0 };
+    algorithmStats = { steps: 0, rule1: 0, rule2: 0, rule3: 0 };
+    andOrState = null;
     updateAlgorithmStats();
     document.getElementById('algorithmLog').innerHTML = '';
     clearGrid();
@@ -195,18 +331,25 @@ function setupAlgorithmSelector() {
     document.querySelectorAll('.algorithm-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             if (this.classList.contains('disabled')) {
-                if (this.dataset.algorithm === 'backtrack') {
-                    addLogEntry('Алгоритм з backtracking буде реалізований пізніше', 'error');
-                } else if (this.dataset.algorithm === 'and-or') {
-                    addLogEntry('Алгоритм з І-АБО графами буде реалізований пізніше', 'error');
-                }
                 return;
             }
 
             document.querySelectorAll('.algorithm-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentAlgorithm = this.dataset.algorithm;
-            addLogEntry(`Обрано алгоритм: ${this.textContent.trim()}`, '');
+
+            const algorithmNames = {
+                'rules': 'Line Solver',
+                'backtrack': 'Line Solver + Backtracking',
+                'and-or': 'І-АБО граф'
+            };
+
+            addLogEntry(`Обрано алгоритм: ${algorithmNames[currentAlgorithm]}`, '');
+
+            // Скидаємо стан І-АБО графа при зміні алгоритму
+            if (currentAlgorithm !== 'and-or') {
+                andOrState = null;
+            }
         });
     });
 }

@@ -237,11 +237,30 @@ function executeBacktrackingStep() {
     const solved = solveWithBacktracking();
 
     if (solved) {
-        return {
-            changed: true,
-            rule: 'rule2',
-            message: 'Backtracking знайшов розв\'язок!'
-        };
+        // Перевіряємо чи дійсно щось змінилось
+        let hasChanges = false;
+        for (let i = 0; i < gridSize.height; i++) {
+            for (let j = 0; j < gridSize.width; j++) {
+                if (initialGrid[i][j] !== gameGrid[i][j]) {
+                    hasChanges = true;
+                    break;
+                }
+            }
+            if (hasChanges) break;
+        }
+
+        if (hasChanges) {
+            return {
+                changed: true,
+                rule: 'rule2',
+                message: 'Backtracking знайшов розв\'язок!'
+            };
+        } else {
+            return {
+                changed: false,
+                message: 'Backtracking завершився без змін'
+            };
+        }
     } else {
         // Відновлюємо початковий стан якщо не вдалося розв'язати
         gameGrid = initialGrid.map(row => [...row]);

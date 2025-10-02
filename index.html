@@ -48,6 +48,9 @@
                 <div class="algorithm-btn" data-algorithm="backtrack">
                     🔄 Line Solver + Backtracking
                 </div>
+                <div class="algorithm-btn" data-algorithm="and-or">
+                    🌳 І-АБО граф
+                </div>
             </div>
 
             <div class="auto-controls">
@@ -110,6 +113,10 @@
                             <span id="rule2Count">0</span>
                         </div>
                         <div class="stats-row">
+                            <span>І-АБО граф:</span>
+                            <span id="rule3Count">0</span>
+                        </div>
+                        <div class="stats-row">
                             <span>Успішність:</span>
                             <span id="successRate">0%</span>
                         </div>
@@ -118,10 +125,11 @@
 
                 <div class="info-section">
                     <h4>🎲 Шаблони</h4>
-                    <button class="btn-secondary" onclick="loadTemplate('heart')" style="width: 100%; margin-bottom: 5px;">❤️ Серце</button>
-                    <button class="btn-secondary" onclick="loadTemplate('star')" style="width: 100%; margin-bottom: 5px;">⭐ Зірка</button>
-                    <button class="btn-secondary" onclick="loadTemplate('house')" style="width: 100%; margin-bottom: 5px;">🏠 Будинок</button>
-                    <button class="btn-warning" onclick="loadTemplate('hard')" style="width: 100%;">🧩 Складний</button>
+                    <button class="btn-secondary" onclick="loadTemplate('heart')" style="width: 100%; margin-bottom: 5px;">❤️ Серце (9×9)</button>
+                    <button class="btn-secondary" onclick="loadTemplate('star')" style="width: 100%; margin-bottom: 5px;">⭐ Зірка (9×9)</button>
+                    <button class="btn-secondary" onclick="loadTemplate('house')" style="width: 100%; margin-bottom: 5px;">🏠 Будинок (9×9)</button>
+                    <button class="btn-warning" onclick="loadTemplate('hard')" style="width: 100%; margin-bottom: 5px;">🧩 Складний (5×5)</button>
+                    <button class="btn-primary" onclick="loadTemplate('complex')" style="width: 100%; background: #9c27b0;">🌳 І-АБО тест (32×50)</button>
                 </div>
 
                 <div class="info-section" id="algorithm-log-section" style="display: none;">
@@ -145,6 +153,7 @@
 
     <script src="js/game-state.js"></script>
     <script src="js/solving-algorithms.js"></script>
+    <script src="js/and-or-graph.js"></script>
     <script src="js/game-logic.js"></script>
     <script src="js/ui-handlers.js"></script>
     <script src="js/templates.js"></script>
