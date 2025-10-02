@@ -6,12 +6,13 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1600px;  /* Збільшено для великих сіток */
     margin: 0 auto;
     background: white;
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;  /* Додано горизонтальний scroll */
 }
 
 .header {

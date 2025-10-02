@@ -1,110 +1,237 @@
-// Шаблони японських кросвордів
+// Логіка гри та розрахунки
 
-function loadTemplate(template) {
-    if (template === 'heart') {
-        gridSize = {width: 9, height: 9};
-        solution = [
-            [0,1,1,0,1,1,0,0,0],
-            [1,1,1,1,1,1,1,0,0],
-            [1,1,1,1,1,1,1,0,0],
-            [1,1,1,1,1,1,1,0,0],
-            [0,1,1,1,1,1,0,0,0],
-            [0,0,1,1,1,0,0,0,0],
-            [0,0,0,1,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0]
-        ];
-    } else if (template === 'star') {
-        gridSize = {width: 9, height: 9};
-        solution = [
-            [0,0,0,0,1,0,0,0,0],
-            [0,0,0,1,1,1,0,0,0],
-            [0,0,0,1,1,1,0,0,0],
-            [1,1,1,1,1,1,1,1,1],
-            [0,1,1,1,1,1,1,1,0],
-            [0,0,1,1,1,1,1,0,0],
-            [0,1,1,0,1,0,1,1,0],
-            [1,1,0,0,1,0,0,1,1],
-            [1,0,0,0,0,0,0,0,1]
-        ];
-    } else if (template === 'house') {
-        gridSize = {width: 9, height: 9};
-        solution = [
-            [0,0,0,0,1,0,0,0,0],
-            [0,0,0,1,1,1,0,0,0],
-            [0,0,1,1,1,1,1,0,0],
-            [0,1,1,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1],
-            [1,0,1,1,1,1,1,0,1],
-            [1,0,1,0,0,0,1,0,1],
-            [1,0,1,0,0,0,1,0,1],
-            [1,1,1,0,0,0,1,1,1]
-        ];
-    } else if (template === 'hard') {
-        gridSize = {width: 5, height: 5};
-        solution = [
-            [1,1,0,1,1],
-            [1,1,0,1,1],
-            [0,0,0,0,0],
-            [1,0,0,0,1],
-            [0,1,1,1,0]
-        ];
-    } else if (template === 'complex') {
-        // Складний кросворд 32×50 для І-АБО графа
-        gridSize = {width: 32, height: 50};
+function calculateHints() {
+    rowHints = [];
+    for (let i = 0; i < gridSize.height; i++) {
+        const hints = [];
+        let count = 0;
+        for (let j = 0; j < gridSize.width; j++) {
+            if (solution[i][j] === 1) {
+                count++;
+            } else {
+                if (count > 0) {
+                    hints.push(count);
+                    count = 0;
+                }
+            }
+        }
+        if (count > 0) hints.push(count);
+        if (hints.length === 0) hints.push(0);
+        rowHints.push(hints);
+    }
 
-        // Підказки для рядків (зчитані з зображення)
-        rowHints = [
-            [9], [14], [18], [23], [26], [27], [28], [29], [30], [30], [31],
-            [2,12,14], [1,13,13], [13,11], [13,7], [14,5], [14,1], [14,1],
-            [13,3,1], [13,2,2,3], [13,2,2,1], [5,3,1,1,1,1], [4,3,2,2],
-            [2,1,3,4,3], [4,1,3,5,3,1], [8,1,3,3,1], [7,1,4,2,1],
-            [5,1,3,3], [5,1,1,2], [4,2,1], [4,2,2], [4,1,2,1],
-            [4,3,1], [3,3,1], [3,1,2], [2,1,7], [2,1,3,2],
-            [1,2,2,1], [1,2,1,1], [1,1], [2,1], [2], [3,1],
-            [6,2], [10,3], [18], [13], [15], [16], [17]
-        ];
+    colHints = [];
+    for (let j = 0; j < gridSize.width; j++) {
+        const hints = [];
+        let count = 0;
+        for (let i = 0; i < gridSize.height; i++) {
+            if (solution[i][j] === 1) {
+                count++;
+            } else {
+                if (count > 0) {
+                    hints.push(count);
+                    count = 0;
+                }
+            }
+        }
+        if (count > 0) hints.push(count);
+        if (hints.length === 0) hints.push(0);
+        colHints.push(hints);
+    }
+}
 
-        // Підказки для колонок (правильні, вертикально)
-        colHints = [
-            [9,14], [9,12], [9,10], [9,8], [17,5,1], [20,3,2], [26,3], [25,3],
-            [23,4], [30,5], [22,2,4,6], [21,2,2,7], [21,3,8], [21,2,1,8],
-            [29,8], [28,7], [11,15,7], [11,6,6], [11,6], [11,1,6],
-            [11,2,3,2,5], [11,1,3,2,1], [11,2,3,1,1], [12,2,3,2,1],
-            [12,2,2,1,1], [12,1,2,1,1], [11,2,1,2], [10,2,1,1,2,1,1],
-            [9,2,2,2,1,2,2], [7,4,3,2,6,3], [4,5,4,1,3], [3,4]
-        ];
+function generateRandomPuzzle() {
+    solution = Array(gridSize.height).fill().map(() => Array(gridSize.width).fill(0));
 
-        // Генеруємо порожнє рішення - користувач має розв'язати самостійно
-        solution = Array(50).fill().map(() => Array(32).fill(0));
-
-        createGrid();
-        resetGame();
-        updateDisplay();
-
-        document.getElementById('gridWidth').value = gridSize.width;
-        document.getElementById('gridHeight').value = gridSize.height;
-
-        addLogEntry('Складний кросворд 32×50 завантажено!', 'rule3');
-        addLogEntry('Рядків: 50, Колонок: 32', 'rule3');
-        addLogEntry('Цей кросворд потребує І-АБО граф для розв\'язання', 'rule3');
-        updateStatus('Великий складний кросворд - ідеально для І-АБО графа!');
-        return;
+    for (let i = 0; i < gridSize.height; i++) {
+        for (let j = 0; j < gridSize.width; j++) {
+            solution[i][j] = Math.random() < 0.4 ? 1 : 0;
+        }
     }
 
     calculateHints();
-    createGrid();
     resetGame();
-    updateDisplay();
+}
 
-    document.getElementById('gridWidth').value = gridSize.width;
-    document.getElementById('gridHeight').value = gridSize.height;
+function createGrid() {
+    const gridElement = document.getElementById('gameGrid');
+    gridElement.style.gridTemplateColumns = `repeat(${gridSize.width}, 1fr)`;
+    gridElement.innerHTML = '';
 
-    if (template === 'hard') {
-        setTimeout(() => {
-            addLogEntry('Складний шаблон - цей кросворд потребує більше правил!', 'error');
-            addLogEntry('Спробуйте "Один крок" кілька разів, щоб побачити межі алгоритму', '');
-            updateStatus('Складний кросворд завантажено!');
-        }, 100);
+    // Додаємо клас для великих сіток
+    if (gridSize.width > 20 || gridSize.height > 20) {
+        gridElement.classList.add('large');
+    } else {
+        gridElement.classList.remove('large');
     }
+
+    for (let i = 0; i < gridSize.height; i++) {
+        for (let j = 0; j < gridSize.width; j++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            cell.addEventListener('click', () => handleCellClick(i, j));
+            gridElement.appendChild(cell);
+        }
+    }
+
+    const rowHintsContainer = document.getElementById('rowHints');
+    rowHintsContainer.innerHTML = '';
+    const isLarge = gridSize.width > 20 || gridSize.height > 20;
+
+    for (let i = 0; i < gridSize.height; i++) {
+        const rowHintDiv = document.createElement('div');
+        rowHintDiv.className = 'row-hint';
+        if (isLarge) rowHintDiv.style.height = '13px';
+
+        // Перевірка чи існує rowHints[i]
+        if (rowHints[i]) {
+            rowHints[i].forEach(hint => {
+                const hintSpan = document.createElement('span');
+                hintSpan.className = isLarge ? 'hint small' : 'hint';
+                hintSpan.textContent = hint;
+                rowHintDiv.appendChild(hintSpan);
+            });
+        } else {
+            // Якщо немає підказки - додаємо 0
+            const hintSpan = document.createElement('span');
+            hintSpan.className = isLarge ? 'hint small' : 'hint';
+            hintSpan.textContent = '?';
+            rowHintDiv.appendChild(hintSpan);
+        }
+        rowHintsContainer.appendChild(rowHintDiv);
+    }
+
+    const colHintsContainer = document.getElementById('colHints');
+    colHintsContainer.innerHTML = '';
+    for (let j = 0; j < gridSize.width; j++) {
+        const colHintDiv = document.createElement('div');
+        colHintDiv.className = 'col-hint-container';
+        if (isLarge) {
+            colHintDiv.style.width = '13px';
+            colHintDiv.style.height = '60px';
+        }
+
+        // Перевірка чи існує colHints[j]
+        if (colHints[j]) {
+            colHints[j].forEach(hint => {
+                const hintSpan = document.createElement('span');
+                hintSpan.className = isLarge ? 'hint small' : 'hint';
+                hintSpan.textContent = hint;
+                colHintDiv.appendChild(hintSpan);
+            });
+        } else {
+            // Якщо немає підказки - додаємо ?
+            const hintSpan = document.createElement('span');
+            hintSpan.className = isLarge ? 'hint small' : 'hint';
+            hintSpan.textContent = '?';
+            colHintDiv.appendChild(hintSpan);
+        }
+        colHintsContainer.appendChild(colHintDiv);
+    }
+}
+
+function handleCellClick(row, col) {
+    if (currentGameMode === 'auto') return;
+
+    if (currentMode === 'fill') {
+        gameGrid[row][col] = gameGrid[row][col] === 1 ? 0 : 1;
+    } else if (currentMode === 'cross') {
+        gameGrid[row][col] = gameGrid[row][col] === -1 ? 0 : -1;
+    } else if (currentMode === 'clear') {
+        gameGrid[row][col] = 0;
+    }
+    updateDisplay();
+}
+
+function updateDisplay() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        const value = gameGrid[row][col];
+
+        cell.className = 'cell';
+        if (value === 1) {
+            cell.classList.add('filled');
+        } else if (value === -1) {
+            cell.classList.add('crossed');
+        }
+
+        if (lastChangedCell && lastChangedCell.row === row && lastChangedCell.col === col) {
+            cell.classList.add('last-changed');
+            setTimeout(() => {
+                cell.classList.remove('last-changed');
+                lastChangedCell = null;
+            }, 1000);
+        }
+    });
+
+    updateProgress();
+}
+
+function updateProgress() {
+    let filled = 0;
+    let total = 0;
+    for (let i = 0; i < gridSize.height; i++) {
+        for (let j = 0; j < gridSize.width; j++) {
+            if (solution[i][j] === 1) {
+                total++;
+                if (gameGrid[i][j] === 1) filled++;
+            }
+        }
+    }
+    const progress = total > 0 ? Math.round((filled / total) * 100) : 0;
+    document.getElementById('progress').textContent = progress + '%';
+    document.getElementById('errors').textContent = errors;
+}
+
+function checkSolution() {
+    let correct = true;
+    for (let i = 0; i < gridSize.height; i++) {
+        for (let j = 0; j < gridSize.width; j++) {
+            if (gameGrid[i][j] === 1 && solution[i][j] !== 1) {
+                correct = false;
+                errors++;
+            }
+            if (gameGrid[i][j] !== -1 && solution[i][j] === 1 && gameGrid[i][j] !== 1) {
+                correct = false;
+            }
+        }
+    }
+
+    const statusElement = document.getElementById('gameStatus');
+    if (correct) {
+        statusElement.textContent = 'Вітаємо! Головоломку розв\'язано!';
+        statusElement.className = 'status solved';
+    } else {
+        statusElement.textContent = 'Є помилки. Продовжуйте спроби!';
+        statusElement.className = 'status playing';
+    }
+    updateDisplay();
+}
+
+function clearGrid() {
+    if (currentGameMode === 'manual' && !confirm('Очистити всю сітку?')) return;
+    resetGame();
+}
+
+function createCustomGrid() {
+    const width = parseInt(document.getElementById('gridWidth').value);
+    const height = parseInt(document.getElementById('gridHeight').value);
+
+    if (width < 5 || width > 20 || height < 5 || height > 20) {
+        alert('Розмір має бути від 5 до 20');
+        return;
+    }
+
+    gridSize = {width, height};
+    generateRandomPuzzle();
+    createGrid();
+    updateDisplay();
+}
+
+function newGame() {
+    loadTemplate('star');
 }

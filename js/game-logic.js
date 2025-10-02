@@ -85,12 +85,21 @@ function createGrid() {
         rowHintDiv.className = 'row-hint';
         if (isLarge) rowHintDiv.style.height = '13px';
 
-        rowHints[i].forEach(hint => {
+        // Перевірка чи існує rowHints[i]
+        if (rowHints[i]) {
+            rowHints[i].forEach(hint => {
+                const hintSpan = document.createElement('span');
+                hintSpan.className = isLarge ? 'hint small' : 'hint';
+                hintSpan.textContent = hint;
+                rowHintDiv.appendChild(hintSpan);
+            });
+        } else {
+            // Якщо немає підказки - додаємо 0
             const hintSpan = document.createElement('span');
             hintSpan.className = isLarge ? 'hint small' : 'hint';
-            hintSpan.textContent = hint;
+            hintSpan.textContent = '?';
             rowHintDiv.appendChild(hintSpan);
-        });
+        }
         rowHintsContainer.appendChild(rowHintDiv);
     }
 
@@ -104,12 +113,21 @@ function createGrid() {
             colHintDiv.style.height = '60px';
         }
 
-        colHints[j].forEach(hint => {
+        // Перевірка чи існує colHints[j]
+        if (colHints[j]) {
+            colHints[j].forEach(hint => {
+                const hintSpan = document.createElement('span');
+                hintSpan.className = isLarge ? 'hint small' : 'hint';
+                hintSpan.textContent = hint;
+                colHintDiv.appendChild(hintSpan);
+            });
+        } else {
+            // Якщо немає підказки - додаємо ?
             const hintSpan = document.createElement('span');
             hintSpan.className = isLarge ? 'hint small' : 'hint';
-            hintSpan.textContent = hint;
+            hintSpan.textContent = '?';
             colHintDiv.appendChild(hintSpan);
-        });
+        }
         colHintsContainer.appendChild(colHintDiv);
     }
 }
